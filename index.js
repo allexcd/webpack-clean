@@ -8,12 +8,14 @@ var vow = require('vow');
 var fileExists = require('file-exists');
 var join = path.join;
 
-function WebpackClean(files, context) {
+function WebpackClean(files, context, before) {
     if (!Array.isArray(files)) files = [files];
     //
     this.files = files;
     // get webpack root
     this.context = context || path.dirname(module.parent.filename);
+    // cleanup before compiling? Useful for clearing out hashed files
+    this.before = !!before;
 }
 
 WebpackClean.prototype.filePath = function(file) {
@@ -45,9 +47,10 @@ WebpackClean.prototype.cleanFile = function (file) {
 };
 
 WebpackClean.prototype.apply = function (compiler) {
+    var stage = this.before ? "compilation" : "done"
     var _self = this;
 
-    compiler.plugin("done", function (compilation) {
+    compiler.plugin(stage, function (compilation) {
         var _promises = [];
 
         _self.files.forEach(function (file) {

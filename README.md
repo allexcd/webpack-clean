@@ -36,6 +36,12 @@ module.exports = {
 
 module.exports = {
     plugins: [
+        // Cleanup before build. Useful for clearing old hashed files.
+        new WebpackCleanPlugin([
+            'dist/fileC.*.js',
+        ], path.join(__dirname, 'app'), true),
+
+        // Cleanup after build
         new WebpackCleanPlugin([
             'dist/fileA.js',
             'dist/fileB.js'
