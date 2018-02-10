@@ -1,0 +1,9 @@
+{
+  "extends": "standard",
+  "plugins": [
+    "json"
+  ],
+  "rules": {
+    "semi": [2, "always"]
+  }
+}
