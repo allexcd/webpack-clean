@@ -16,7 +16,7 @@ function WebpackClean (files, context) {
 }
 
 WebpackClean.prototype.getFileList = function (files) {
-  return (!Array.isArray(files)) ? [files] : files;
+  return (!Array.isArray(files)) ? new Array(files) : files;
 };
 
 WebpackClean.prototype.getContext = function (context) {
