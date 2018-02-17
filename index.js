@@ -2,18 +2,22 @@
  * Created by AlexCD on 07/09/2015.
  */
 
-const fs = require('fs-extra');
 const path = require('path');
-const vow = require('vow');
-const fileExists = require('file-exists');
 const join = path.join;
+const fs = require('fs-extra');
+const logger = require("winston-color");
+const fileExists = require('file-exists');
 
-function WebpackClean (files, context) {
+function WebpackClean (files, context, removeMaps) {
   this.files = this.getFileList(files);
   this.context = this.getContext(context); // get webpack roots
-  this.promises = [];
-  this.pluginName = 'WebpackClean'
+  this.removeMaps = removeMaps;
+  this.pluginName = 'WebpackClean:'
 }
+
+WebpackClean.prototype.log = function (type, msg) {
+  logger[type](`${this.pluginName} ${msg}`)
+};
 
 WebpackClean.prototype.getFileList = function (files) {
   return (!Array.isArray(files)) ? new Array(files) : files;
@@ -31,55 +35,67 @@ WebpackClean.prototype.fileMap = function (file) {
   return file + '.map';
 };
 
-WebpackClean.prototype.addToRemovalList = function (filePath) {
-  fileExists(filePath, (err, exists) => {
-    if (err) {
+WebpackClean.prototype.isExistingFile = function (filePath) {
+  return fileExists(filePath)
+    .then(exists => {
+      if(exists) {
+        return this.removeFile(filePath)
+      } else {
+        this.log('warn', 'missing file ' + filePath);
+      }
+    })
+    .catch((err) => {
       console.error(this.pluginName, err)
-    }
-    if (exists) {
-      this.promises.push(this.cleanFile(filePath));
-    }
-  })
+    })
 };
 
-WebpackClean.prototype.cleanFile = function (file) {
-  const _self = this;
-  const _defer = vow.defer();
-  const _removeFile = [
-    fs.remove(file, function (err) {
-      if (err) {
-        _defer.reject(_self.pluginName + ' ' + err);
+WebpackClean.prototype.removeFile = function (file) {
+  const self = this;
+  const promise = new Promise((resolve, reject) => {
+    fs.unlink(file, (err) => {
+      if(err) {
+        reject(self.pluginName + ' ' + err)
+      } else {
+        self.log('info', 'removed ' + file);
+        resolve(self.pluginName, 'file removed:', file)
       }
-      console.log(_self.pluginName, 'file removed:', file);
     })
-  ];
+  });
 
-  _defer.resolve(vow.all(_removeFile));
+  return promise;
+};
 
-  return _defer.promise();
+WebpackClean.prototype.checkFiles = function (files, removeMaps) {
+  let fileExistsPromises = [];
+  const self = this;
+
+  //check if each file exists
+  files.forEach(function (file) {
+    const filePath = self.filePath(file);
+    const fileMap = self.fileMap(filePath);
+
+    // add to list the file to be removed
+    fileExistsPromises.push(self.isExistingFile(filePath));
+    // add to list the map file to be removed
+    if(removeMaps) {
+      fileExistsPromises.push(self.isExistingFile(fileMap));
+    }
+  });
+
+  return fileExistsPromises;
 };
 
 WebpackClean.prototype.apply = function (compiler) {
-  const _self = this;
+  const self = this;
 
-  compiler.plugin('done', function (compilation) {
-    _self.files.forEach(function (file) {
-      const _filePath = _self.filePath(file);
-      const _fileMap = _self.fileMap(_filePath);
-
-      // add to list the file to be removed
-      _self.addToRemovalList(_filePath);
-      // add to list the map file to be removed
-      _self.addToRemovalList(_fileMap);
-    });
-
-    vow.all(_self.promises)
-      .then(function () {
-        console.log(_self.pluginName, 'done');
+  compiler.plugin('done', function (stats) {
+    Promise.all(self.checkFiles(self.files, self.removeMaps))
+      .then((removalPromises) => Promise.all(removalPromises))
+      .then(() => {self.log('info', 'done')})
+      .catch((err) => {
+        self.log('error', err);
+        stats.compilation.errors.push(new Error(err));
       })
-      .catch(function (text) {
-        compilation.errors.push(new Error(text));
-      });
   });
 };
 
