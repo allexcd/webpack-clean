@@ -44,7 +44,7 @@ WebpackClean.prototype.isExistingFile = function (filePath) {
         this.log('warn', 'missing file ' + filePath);
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(this.pluginName, err)
     })
 };
@@ -52,7 +52,7 @@ WebpackClean.prototype.isExistingFile = function (filePath) {
 WebpackClean.prototype.removeFile = function (file) {
   const self = this;
   const promise = new Promise((resolve, reject) => {
-    fs.unlink(file, (err) => {
+    fs.unlink(file, err => {
       if(err) {
         reject(self.pluginName + ' ' + err)
       } else {
@@ -70,7 +70,7 @@ WebpackClean.prototype.checkFiles = function (files, removeMaps) {
   const self = this;
 
   //check if each file exists
-  files.forEach(function (file) {
+  files.forEach(file => {
     const filePath = self.filePath(file);
     const fileMap = self.fileMap(filePath);
 
@@ -88,7 +88,7 @@ WebpackClean.prototype.checkFiles = function (files, removeMaps) {
 WebpackClean.prototype.apply = function (compiler) {
   const self = this;
 
-  compiler.plugin('done', function (stats) {
+  compiler.plugin('done', stats => {
     Promise.all(self.checkFiles(self.files, self.removeMaps))
       .then((removalPromises) => Promise.all(removalPromises))
       .then(() => {self.log('info', 'done')})
