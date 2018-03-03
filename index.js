@@ -27,11 +27,11 @@ WebpackClean.prototype.getContext = function (context) {
   return context || path.dirname(module.parent.filename);
 };
 
-WebpackClean.prototype.filePath = function (file) {
-  return join(this.context, file);
+WebpackClean.prototype.joinFilePath = function (context, file) {
+  return join(context, file);
 };
 
-WebpackClean.prototype.fileMap = function (file) {
+WebpackClean.prototype.addMapExtension = function (file) {
   return file + '.map';
 };
 
@@ -71,14 +71,14 @@ WebpackClean.prototype.checkFiles = function (files, removeMaps) {
 
   // check if each file exists
   files.forEach(file => {
-    const filePath = self.filePath(file);
-    const fileMap = self.fileMap(filePath);
+    const filePath = self.joinFilePath(self.context, file);
+    const fileMapPath = self.addMapExtension(filePath);
 
     // add to list the file to be removed
     fileExistsPromises.push(self.isExistingFile(filePath));
     // add to list the map file to be removed
     if (removeMaps) {
-      fileExistsPromises.push(self.isExistingFile(fileMap));
+      fileExistsPromises.push(self.isExistingFile(fileMapPath));
     }
   });
 
