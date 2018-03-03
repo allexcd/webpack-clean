@@ -45,5 +45,9 @@ Temporary Items
 # Webstorm
 .idea
 
+# Visual Studio Code
+.vscode
+.history
+
 # Project ignored dirs
 node_modules

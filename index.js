@@ -5,18 +5,18 @@
 const path = require('path');
 const join = path.join;
 const fs = require('fs-extra');
-const logger = require("winston-color");
+const logger = require('winston-color');
 const fileExists = require('file-exists');
 
 function WebpackClean (files, context, removeMaps) {
   this.files = this.getFileList(files);
   this.context = this.getContext(context); // get webpack roots
   this.removeMaps = removeMaps;
-  this.pluginName = 'WebpackClean:'
+  this.pluginName = 'WebpackClean:';
 }
 
 WebpackClean.prototype.log = function (type, msg) {
-  logger[type](`${this.pluginName} ${msg}`)
+  logger[type](`${this.pluginName} ${msg}`);
 };
 
 WebpackClean.prototype.getFileList = function (files) {
@@ -38,28 +38,28 @@ WebpackClean.prototype.fileMap = function (file) {
 WebpackClean.prototype.isExistingFile = function (filePath) {
   return fileExists(filePath)
     .then(exists => {
-      if(exists) {
-        return this.removeFile(filePath)
+      if (exists) {
+        return this.removeFile(filePath);
       } else {
-        this.log('warn', 'missing file ' + filePath);
+        this.log('warn', 'file does not exist ' + filePath);
       }
     })
     .catch(err => {
-      console.error(this.pluginName, err)
-    })
+      this.log('error', this.pluginName, err);
+    });
 };
 
 WebpackClean.prototype.removeFile = function (file) {
   const self = this;
   const promise = new Promise((resolve, reject) => {
     fs.unlink(file, err => {
-      if(err) {
-        reject(self.pluginName + ' ' + err)
+      if (err) {
+        reject(err);
       } else {
         self.log('info', 'removed ' + file);
-        resolve(self.pluginName, 'file removed:', file)
+        resolve(self.pluginName, 'file removed:', file);
       }
-    })
+    });
   });
 
   return promise;
@@ -69,7 +69,7 @@ WebpackClean.prototype.checkFiles = function (files, removeMaps) {
   let fileExistsPromises = [];
   const self = this;
 
-  //check if each file exists
+  // check if each file exists
   files.forEach(file => {
     const filePath = self.filePath(file);
     const fileMap = self.fileMap(filePath);
@@ -77,7 +77,7 @@ WebpackClean.prototype.checkFiles = function (files, removeMaps) {
     // add to list the file to be removed
     fileExistsPromises.push(self.isExistingFile(filePath));
     // add to list the map file to be removed
-    if(removeMaps) {
+    if (removeMaps) {
       fileExistsPromises.push(self.isExistingFile(fileMap));
     }
   });
@@ -90,12 +90,12 @@ WebpackClean.prototype.apply = function (compiler) {
 
   compiler.plugin('done', stats => {
     Promise.all(self.checkFiles(self.files, self.removeMaps))
-      .then((removalPromises) => Promise.all(removalPromises))
-      .then(() => {self.log('info', 'done')})
+      .then(removalPromises => Promise.all(removalPromises))
+      .then(() => { self.log('info', 'done'); })
       .catch((err) => {
         self.log('error', err);
         stats.compilation.errors.push(new Error(err));
-      })
+      });
   });
 };
 
