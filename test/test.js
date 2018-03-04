@@ -28,7 +28,6 @@ test('getContext should return the proper context', t => {
 });
 
 test('joinFilePath should return the proper file path', t => {
-  const plugin = new WebpackClean('file.js', 'dist');
-  const joinFilePath = plugin.joinFilePath;
+  const joinFilePath = WebpackClean.prototype.joinFilePath;
   t.is(joinFilePath('dist', 'file.js'), 'dist/file.js');
 });
