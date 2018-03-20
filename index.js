@@ -8,55 +8,39 @@ const fs = require('fs-extra');
 const logger = require('winston-color');
 const fileExists = require('file-exists');
 
-function WebpackClean (files, context, removeMaps) {
-  this.files = this.getFileList(files);
-  this.context = this.getContext(context); // get webpack roots
-  this.removeMaps = removeMaps;
-  this.pluginName = 'WebpackClean:';
-}
+const pluginName = 'WebpackClean';
 
-WebpackClean.prototype.log = function (type, msg) {
-  logger[type](`${this.pluginName} ${msg}`);
+function log (type, msg) {
+  logger[type](`${pluginName} - ${msg}`);
 };
 
-WebpackClean.prototype.getFileList = function (files) {
-  return (!Array.isArray(files)) ? new Array(files) : files;
+function getFileList (files) {
+  if (!files) {
+    return [];
+  }
+  return (Array.isArray(files)) ? files : new Array(files);
 };
 
-WebpackClean.prototype.getContext = function (context) {
-  return context || path.dirname(module.parent.filename);
-};
-
-WebpackClean.prototype.joinFilePath = function (context, file) {
-  return join(context, file);
-};
-
-WebpackClean.prototype.addMapExtension = function (file) {
+function addMapExtension (file) {
   return file + '.map';
 };
 
-WebpackClean.prototype.isExistingFile = function (filePath) {
-  return fileExists(filePath)
-    .then(exists => {
-      if (exists) {
-        return this.removeFile(filePath);
-      } else {
-        this.log('warn', 'file does not exist ' + filePath);
-      }
-    })
-    .catch(err => {
-      this.log('error', this.pluginName, err);
-    });
+function getContext (context) {
+  return context || path.dirname(module.parent.filename);
 };
 
-WebpackClean.prototype.removeFile = function (file) {
+function joinFilePath (context, file) {
+  return join(context, file);
+};
+
+function removeFile (file) {
   const self = this;
   const promise = new Promise((resolve, reject) => {
     fs.unlink(file, err => {
       if (err) {
         reject(err);
       } else {
-        self.log('info', 'removed ' + file);
+        log('info', 'removed ' + file);
         resolve(self.pluginName, 'file removed:', file);
       }
     });
@@ -65,35 +49,54 @@ WebpackClean.prototype.removeFile = function (file) {
   return promise;
 };
 
-WebpackClean.prototype.checkFiles = function (files, removeMaps) {
+function isExistingFile (filePath) {
+  return fileExists(filePath)
+    .then(exists => {
+      if (exists) {
+        return removeFile(filePath);
+      } else {
+        log('warn', 'file ' + filePath + ' does not exist');
+      }
+    })
+    .catch(err => {
+      log('error', pluginName, err);
+    });
+};
+
+function checkFiles (files, context, removeMaps) {
   let fileExistsPromises = [];
-  const self = this;
 
   // check if each file exists
   files.forEach(file => {
-    const filePath = self.joinFilePath(self.context, file);
-    const fileMapPath = self.addMapExtension(filePath);
+    const filePath = joinFilePath(context, file);
+    const fileMapPath = addMapExtension(filePath);
 
     // add to list the file to be removed
-    fileExistsPromises.push(self.isExistingFile(filePath));
+    fileExistsPromises.push(isExistingFile(filePath));
     // add to list the map file to be removed
     if (removeMaps) {
-      fileExistsPromises.push(self.isExistingFile(fileMapPath));
+      fileExistsPromises.push(isExistingFile(fileMapPath));
     }
   });
 
   return fileExistsPromises;
 };
 
+function WebpackClean (files, context, removeMaps) {
+  this.files = getFileList(files);
+  this.context = getContext(context); // get webpack roots
+  this.removeMaps = removeMaps;
+}
+
 WebpackClean.prototype.apply = function (compiler) {
   const self = this;
 
   compiler.plugin('done', stats => {
-    Promise.all(self.checkFiles(self.files, self.removeMaps))
+    Promise.all(checkFiles(self.files, self.context, self.removeMaps))
       .then(removalPromises => Promise.all(removalPromises))
-      .then(() => { self.log('info', 'done'); })
+      .then(() => { log('info', 'DONE'); })
       .catch((err) => {
-        self.log('error', err);
+        log('error', err);
         stats.compilation.errors.push(new Error(err));
       });
   });

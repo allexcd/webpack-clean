@@ -1,33 +1,55 @@
 import test from 'ava';
 
-const WebpackClean = require('../index');
+const rewire = require('rewire');
+const WebpackClean = rewire('../index');
 
-test('WebpackClean constructor optional params', t => {
-  const plugin = new WebpackClean('file.js', 'dist', true);
-  t.truthy(plugin.removeMaps);
-  t.is(plugin.pluginName, 'WebpackClean:');
+let getFileList, addMapExtension, getContext, joinFilePath;
+
+test.beforeEach(() => {
+  getFileList = WebpackClean.__get__('getFileList');
+  addMapExtension = WebpackClean.__get__('addMapExtension');
+  getContext = WebpackClean.__get__('getContext');
+  joinFilePath = WebpackClean.__get__('joinFilePath');
 });
 
-test('getFilesList should return a list of file/files', t => {
-  const getFileList = WebpackClean.prototype.getFileList;
+test('WebpackClean constructor should have optional params', t => {
+  const files = ['files.js'];
+  const context = 'dist';
+  const removeMaps = true;
+
+  const plugin = new WebpackClean(files, context, removeMaps);
+  t.truthy(plugin.removeMaps);
+});
+
+test('getFilesList should return a one item list, if one single file is received', t => {
   t.deepEqual(getFileList('one.file.only'), ['one.file.only']);
+});
+
+test('getFilesList should return the list of files provided', t => {
   t.deepEqual(getFileList(['file1.js', 'file2.js']), ['file1.js', 'file2.js']);
+});
+
+test('getFilesList should return an empty list', t => {
   t.deepEqual(getFileList([]), []);
 });
 
+test('getFilesList should return an empty list if no files provided', t => {
+  t.deepEqual(getFileList(), []);
+});
+
 test('addMapExtension should return the map file name', t => {
-  const addMapExtension = WebpackClean.prototype.addMapExtension;
   t.is(addMapExtension('filename'), 'filename.map');
   t.is(addMapExtension('file.name.js'), 'file.name.js.map');
 });
 
-test('getContext should return the proper context', t => {
-  const getContext = WebpackClean.prototype.getContext;
+test('getContext should return the context provided', t => {
   t.is(getContext('some/base/path'), 'some/base/path');
+});
+
+test('getContext should return the basePath if no context is provided', t => {
   t.is(getContext(), __dirname);
 });
 
-test('joinFilePath should return the proper file path', t => {
-  const joinFilePath = WebpackClean.prototype.joinFilePath;
+test('joinFilePath should return the joined path', t => {
   t.is(joinFilePath('dist', 'file.js'), 'dist/file.js');
 });
