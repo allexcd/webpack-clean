@@ -25,8 +25,8 @@ function addMapExtension (file) {
   return file + '.map';
 };
 
-function getContext (context) {
-  return context || path.dirname(module.parent.filename);
+function getContext (basePath) {
+  return basePath || path.dirname(module.parent.filename);
 };
 
 function joinFilePath (context, file) {
@@ -82,9 +82,10 @@ function checkFiles (files, context, removeMaps) {
   return fileExistsPromises;
 };
 
-function WebpackClean (files, context, removeMaps) {
+// allow the options object to be omitted in the constructor function
+function WebpackClean (files, {basePath = null, removeMaps = false} = {}) {
   this.files = getFileList(files);
-  this.context = getContext(context); // get webpack roots
+  this.context = getContext(basePath); // get webpack roots
   this.removeMaps = removeMaps;
 }
 

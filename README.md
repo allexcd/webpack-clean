@@ -8,16 +8,18 @@ Install the plugin:
 
 ```
 npm install webpack-clean --save-dev
+yarn add webpack-clean --dev
 ```
 
 
 ### API
 ```javascript
-new WebpackCleanPlugin(files: array, [basePath: string])
+new WebpackCleanPlugin(files: array|string, [ { [basePath: string], [removeMaps: boolean] } ])
 ```
 
-* `files` – array of files relative to `basePath` or to `context` of your config (if `basePath` param is not specified),
-* `basePath` (this is optional) – directory to be resolved to
+* `files` ï¿½ array of files or string for a single file relative to the `basePath` or to the `context` of your config (if the `basePath` param is not specified),
+* `basePath` (optional) ï¿½ directory to be resolved to
+* `removeMaps` (optional) ï¿½ specify if the `.map` files should be automatically removed
 
 ### Usage
 
@@ -25,21 +27,44 @@ new WebpackCleanPlugin(files: array, [basePath: string])
 var WebpackCleanPlugin = require('webpack-clean');
 
 module.exports = {
-    context: path.join(__dirname, 'app'),
+    context: path.join(__dirname, './'),
+    entry: './src/index.js',
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist')
+    },
     plugins: [
         new WebpackCleanPlugin([
-            'dist/fileA.js',
-            'dist/fileB.js'
+            'dist/test1.js',
+            'dist/test2.js'
         ])
     ]
 };
 
 module.exports = {
     plugins: [
-        new WebpackCleanPlugin([
+        new WebpackCleanPlugin(
             'dist/fileA.js',
-            'dist/fileB.js'
-        ], path.join(__dirname, 'app'))
+            {basePath: path.join(__dirname, './')}
+        )
+    ]
+};
+
+module.exports = {
+    plugins: [
+        new WebpackCleanPlugin([
+            'fileA.js',
+            'fileB.js'
+        ], {basePath: path.join(__dirname, 'dist'))}
+    ]
+};
+
+module.exports = {
+    plugins: [
+        new WebpackCleanPlugin([
+            'fileA.js',
+            'fileB.js'
+        ], {basePath: path.join(__dirname, 'dist'), removeMaps: true)}
     ]
 };
 ```

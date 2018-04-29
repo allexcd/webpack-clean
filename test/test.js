@@ -12,13 +12,28 @@ test.beforeEach(() => {
   joinFilePath = WebpackClean.__get__('joinFilePath');
 });
 
-test('WebpackClean constructor should have optional params', t => {
+test('WebpackClean constructor should receive optional params', t => {
   const files = ['files.js'];
-  const context = 'dist';
+  const basePath = 'dist';
   const removeMaps = true;
 
-  const plugin = new WebpackClean(files, context, removeMaps);
+  const plugin = new WebpackClean(files, {basePath: basePath, removeMaps: removeMaps});
+  t.is(plugin.context, basePath);
   t.truthy(plugin.removeMaps);
+});
+
+test('WebpackClean constructor should use default options if options object is omitted', t => {
+  const files = ['files.js'];
+  const plugin = new WebpackClean(files);
+  t.is(plugin.context, __dirname);
+  t.falsy(plugin.removeMaps);
+});
+
+test('WebpackClean constructor should use the default options if options object is empty, ', t => {
+  const files = ['files.js'];
+  const plugin = new WebpackClean(files, {});
+  t.is(plugin.context, __dirname);
+  t.falsy(plugin.removeMaps);
 });
 
 test('getFilesList should return a one item list, if one single file is received', t => {
