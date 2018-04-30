@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "file-exists": "5.0.1",
-    "fs-extra": "5.0.0"
+    "fs-extra": "5.0.0",
+    "winston-color": "1.0.0"
   },
   "devDependencies": {
     "ava": "0.25.0",
@@ -21,8 +22,7 @@
     "eslint-plugin-node": "6.0.0",
     "eslint-plugin-promise": "3.6.0",
     "eslint-plugin-standard": "3.0.1",
-    "rewire": "3.0.2",
-    "winston-color": "1.0.0"
+    "rewire": "3.0.2"
   },
   "repository": {
     "type": "git",
