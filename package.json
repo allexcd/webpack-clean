@@ -34,7 +34,7 @@
     "build"
   ],
   "author": "AlexCD <alexandru.cd@gmail.com> (www.alexcd.eu)",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/allexcd/webpack-clean/issues"
   },
