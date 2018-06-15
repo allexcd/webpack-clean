@@ -14,6 +14,10 @@ function log (type, msg) {
   logger[type](`${pluginName} - ${msg}`);
 };
 
+function throwErr (msg, err) {
+  throw new Error(msg, err);
+}
+
 function getFileList (files) {
   if (!files) {
     return [];
@@ -58,9 +62,7 @@ function isExistingFile (filePath) {
         log('warn', 'file ' + filePath + ' does not exist');
       }
     })
-    .catch(err => {
-      log('error', pluginName, err);
-    });
+    .catch(err => throwErr(pluginName, err));
 };
 
 function checkFiles (files, context, removeMaps) {
@@ -82,6 +84,17 @@ function checkFiles (files, context, removeMaps) {
   return fileExistsPromises;
 };
 
+function doRemove () {
+  const self = this;
+
+  Promise.all(checkFiles(self.files, self.context, self.removeMaps))
+    .then(removalPromises => Promise.all(removalPromises))
+    .then(() => { log('info', 'DONE'); })
+    .catch((err) => {
+      throwErr(pluginName, err);
+    });
+}
+
 // allow the options object to be omitted in the constructor function
 function WebpackClean (files, {basePath = null, removeMaps = false} = {}) {
   this.files = getFileList(files);
@@ -91,16 +104,21 @@ function WebpackClean (files, {basePath = null, removeMaps = false} = {}) {
 
 WebpackClean.prototype.apply = function (compiler) {
   const self = this;
+  const hasLifecycleHooks = compiler.hasOwnProperty('hooks'); // Webpack 4.x.x
 
-  compiler.plugin('done', stats => {
-    Promise.all(checkFiles(self.files, self.context, self.removeMaps))
-      .then(removalPromises => Promise.all(removalPromises))
-      .then(() => { log('info', 'DONE'); })
-      .catch((err) => {
-        log('error', err);
-        stats.compilation.errors.push(new Error(err));
-      });
-  });
+  if (hasLifecycleHooks) {
+    compiler.hooks.failed.tap(pluginName, err => throwErr(pluginName, err));
+    compiler.hooks.done.tap(pluginName, stats => {
+      doRemove.call(self);
+    });
+  } else {
+    compiler.plugin('done', stats => {
+      if (stats.compilation.errors && stats.compilation.errors.length > 0) {
+        throwErr(pluginName, stats.compilation.errors);
+      }
+      doRemove.call(self);
+    });
+  }
 };
 
 module.exports = WebpackClean;
