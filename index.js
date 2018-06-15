@@ -90,9 +90,7 @@ function doRemove () {
   Promise.all(checkFiles(self.files, self.context, self.removeMaps))
     .then(removalPromises => Promise.all(removalPromises))
     .then(() => { log('info', 'DONE'); })
-    .catch((err) => {
-      throwErr(pluginName, err);
-    });
+    .catch(err => throwErr(pluginName, err));
 }
 
 // allow the options object to be omitted in the constructor function
