@@ -10,6 +10,10 @@ const fileExists = require('file-exists');
 
 const pluginName = 'WebpackClean';
 
+const INFO = 'info';
+const WARN = 'warn';
+const ERROR = 'error';
+
 function log (type, msg) {
   logger[type](`${pluginName} - ${msg}`);
 };
@@ -26,7 +30,7 @@ function getFileList (files) {
 };
 
 function addMapExtension (file) {
-  return file + '.map';
+  return `${file}.map`;
 };
 
 function getContext (basePath) {
@@ -44,7 +48,7 @@ function removeFile (file) {
       if (err) {
         reject(err);
       } else {
-        log('info', 'removed ' + file);
+        log(INFO, `removed ${file}`);
         resolve(self.pluginName, 'file removed:', file);
       }
     });
@@ -59,7 +63,7 @@ function isExistingFile (filePath) {
       if (exists) {
         return removeFile(filePath);
       } else {
-        log('warn', 'file ' + filePath + ' does not exist');
+        log(WARN, `file ${filePath} does not exist`);
       }
     })
     .catch(err => throwErr(pluginName, err));
@@ -89,30 +93,38 @@ function doRemove () {
 
   Promise.all(checkFiles(self.files, self.context, self.removeMaps))
     .then(removalPromises => Promise.all(removalPromises))
-    .then(() => { log('info', 'DONE'); })
+    .then(() => { log(INFO, 'DONE'); })
     .catch(err => throwErr(pluginName, err));
 }
 
 // allow the options object to be omitted in the constructor function
-function WebpackClean (files, {basePath = null, removeMaps = false} = {}) {
+function WebpackClean (files, {basePath = null, removeMaps = false, forceDelete = false} = {}) {
   this.files = getFileList(files);
   this.context = getContext(basePath); // get webpack roots
   this.removeMaps = removeMaps;
+  this.forceDelete = forceDelete;
 }
 
 WebpackClean.prototype.apply = function (compiler) {
   const self = this;
   const hasLifecycleHooks = compiler.hasOwnProperty('hooks'); // Webpack 4.x.x
+  const logErrMsg = 'Files removal aborted due to:';
 
   if (hasLifecycleHooks) {
-    compiler.hooks.failed.tap(pluginName, err => throwErr(pluginName, err));
+    compiler.hooks.failed.tap(pluginName, err => {
+      if (!self.forceDelete) {
+        log(ERROR, `${logErrMsg} \n${err}`);
+        return false;
+      }
+    });
     compiler.hooks.done.tap(pluginName, stats => {
       doRemove.call(self);
     });
   } else {
     compiler.plugin('done', stats => {
-      if (stats.compilation.errors && stats.compilation.errors.length > 0) {
-        throwErr(pluginName, stats.compilation.errors);
+      if (!self.forceDelete && stats.compilation.errors && stats.compilation.errors.length > 0) {
+        log(ERROR, `${logErrMsg} \n${stats.compilation.errors}`);
+        return false;
       }
       doRemove.call(self);
     });
