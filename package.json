@@ -1,6 +1,6 @@
 {
   "name": "webpack-clean",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "A webpack plugin to clean specified files after build",
   "main": "index.js",
   "ava": {
