@@ -3,13 +3,12 @@ import test from 'ava';
 const rewire = require('rewire');
 const WebpackClean = rewire('../index');
 
-let getFileList, addMapExtension, getContext, joinFilePath;
+let getFileList, addMapExtension, getContext;
 
 test.beforeEach(() => {
   getFileList = WebpackClean.__get__('getFileList');
   addMapExtension = WebpackClean.__get__('addMapExtension');
-  getContext = WebpackClean.__get__('getContext');
-  joinFilePath = WebpackClean.__get__('joinFilePath');
+  getContext = WebpackClean.__get__('getContext');s
 });
 
 test('WebpackClean constructor should receive optional params', t => {
@@ -17,7 +16,7 @@ test('WebpackClean constructor should receive optional params', t => {
   const basePath = 'dist';
   const removeMaps = true;
 
-  const plugin = new WebpackClean(files, {basePath: basePath, removeMaps: removeMaps});
+  const plugin = new WebpackClean(files, { basePath: basePath, removeMaps: removeMaps });
   t.is(plugin.context, basePath);
   t.truthy(plugin.removeMaps);
 });
@@ -63,8 +62,4 @@ test('getContext should return the context provided', t => {
 
 test('getContext should return the basePath if no context is provided', t => {
   t.is(getContext(), __dirname);
-});
-
-test('joinFilePath should return the joined path', t => {
-  t.is(joinFilePath('dist', 'file.js'), 'dist/file.js');
 });
