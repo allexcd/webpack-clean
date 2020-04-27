@@ -109,7 +109,7 @@ function WebpackClean (
 WebpackClean.prototype.apply = function (compiler) {
   const self = this;
   // eslint-disable-next-line no-prototype-builtins
-  const hasLifecycleHooks = compiler.prototype.hasOwnProperty('hooks'); // Webpack 4.x.x
+  const hasLifecycleHooks = Object.prototype.hasOwnProperty.call(compiler, 'hooks'); // Webpack 4.x.x
   const logErrMsg = 'Files removal aborted due to:';
 
   if (hasLifecycleHooks) {
