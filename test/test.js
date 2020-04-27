@@ -8,7 +8,7 @@ let getFileList, addMapExtension, getContext;
 test.beforeEach(() => {
   getFileList = WebpackClean.__get__('getFileList');
   addMapExtension = WebpackClean.__get__('addMapExtension');
-  getContext = WebpackClean.__get__('getContext');s
+  getContext = WebpackClean.__get__('getContext');
 });
 
 test('WebpackClean constructor should receive optional params', t => {
