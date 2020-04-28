@@ -1,4 +1,4 @@
-FROM node:8
+FROM node:10
 ENV PORT 3000
 RUN mkdir -p /usr/src/webpack-clean
 WORKDIR /usr/src/webpack-clean
