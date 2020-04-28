@@ -1,6 +1,6 @@
 FROM node:10
-RUN mkdir -p /root/webpack-clean
-WORKDIR /root/webpack-clean
+RUN mkdir -p webpack-clean
+WORKDIR /webpack-clean
 COPY package.json yarn.lock ./
 RUN yarn
 COPY . ./
