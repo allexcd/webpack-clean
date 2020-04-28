@@ -15,6 +15,10 @@
 
 [![license](https://img.shields.io/github/license/allexcd/webpack-clean.svg?style=flat-square)](https://github.com/allexcd/webpack-clean/blob/master/LICENSE)
 
+##### CI Status:
+
+[![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/allexcd_marketplace/webpack-clean%2Fmaster?type=cf-1)]( https%3A%2F%2Fg.codefresh.io%2Fpublic%2Faccounts%2Fallexcd_marketplace%2Fpipelines%2F5ea80cd06a6a4c392b40b192)
+
 ## Webpack Clean
 
 A webpack plugin to clean specified files after build
