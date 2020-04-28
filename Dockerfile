@@ -5,4 +5,4 @@ COPY package.json yarn.lock ./
 RUN yarn
 COPY . ./
 EXPOSE 8080
-CMD npm test
+CMD yarn test
